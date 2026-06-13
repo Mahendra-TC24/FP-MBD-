@@ -167,14 +167,30 @@ CREATE INDEX idx_pembayaran_status ON pembayaran(status);
 -- CREATE USERS WITH DIFFERENT ACCESS RIGHTS
 -- =====================================================
 
--- User 1: Admin (Full Access)
+-- ======================================
+-- Reset role
+-- ======================================
+DROP OWNED BY admin_user, kantin_manager, customer_user, payment_service;
+
+DROP ROLE IF EXISTS admin_user;
+DROP ROLE IF EXISTS kantin_manager;
+DROP ROLE IF EXISTS customer_user;
+DROP ROLE IF EXISTS payment_service;
+-- =================================
+-- role making
+-- =================================
+
+-- User 1: Admin 
 CREATE ROLE admin_user WITH LOGIN PASSWORD 'admin_password_123' NOSUPERUSER NOCREATEDB NOCREATEROLE;
 
--- User 2: Kantin Manager (Limited Access - can manage own canteen)
+-- User 2: Kantin Manager 
 CREATE ROLE kantin_manager WITH LOGIN PASSWORD 'manager_password_123' NOSUPERUSER NOCREATEDB NOCREATEROLE;
 
--- User 3: Customer (Read-Only Access - students)
+-- User 3: Customer 
 CREATE ROLE customer_user WITH LOGIN PASSWORD 'customer_password_123' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+
+-- User 4: payment Service 
+CREATE ROLE payment_service WITH LOGIN PASSWORD 'payment_service_password_123' NOSUPERUSER NOCREATEDB NOCREATEROLE;
 
 -- Grant permissions
 GRANT CONNECT ON DATABASE postgres TO admin_user, kantin_manager, customer_user;
@@ -184,14 +200,30 @@ GRANT USAGE ON SCHEMA public TO admin_user, kantin_manager, customer_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin_user;
 
--- Kantin Manager: Can read all, update own kantin data
+-- Kantin Manager
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO kantin_manager;
-GRANT UPDATE (nama_kantin, lokasi, jam_buka, jam_tutup, rating) ON Kantin TO kantin_manager;
-GRANT UPDATE (is_available, stok_hari_ini) ON Menu TO kantin_manager;
-GRANT INSERT ON pre_order TO kantin_manager;
+GRANT UPDATE (nama_kantin, lokasi, jam_buka, jam_tutup) ON Kantin TO kantin_manager;
+GRANT INSERT ON Sesi_Waktu TO kantin_manager;
+GRANT UPDATE (label, jam_mulai, jam_selesai, kapasitas_order, is_active) ON Sesi_Waktu TO kantin_manager;
+GRANT INSERT ON Kategori_Menu TO kantin_manager;
+GRANT UPDATE (nama_kategori, deskripsi) ON Kategori_Menu TO kantin_manager;
+GRANT INSERT ON Menu TO kantin_manager;
+GRANT UPDATE (nama_menu, deskripsi, harga, is_available, stok_hari_ini, Kategori_Menu) ON Menu TO kantin_manager;
+GRANT UPDATE (status) ON pre_order TO kantin_manager;
 
--- Customer: Can only read and insert orders
+-- Customer
 GRANT SELECT ON mahasiswa, Kantin, Sesi_Waktu, Kategori_Menu, Menu, Payment_gateway TO customer_user;
-GRANT INSERT, UPDATE ON pre_order TO customer_user;
-GRANT INSERT ON pre_order_Menu TO customer_user;
-GRANT INSERT ON pembayaran TO customer_user;
+GRANT INSERT (id_pre_order,kode_order,tanggal_ambil,metode_bayar,catatan,mahasiswa_id_us,Sesi_Waktu_id_slo)
+ON pre_order TO customer_user;
+GRANT UPDATE (tanggal_ambil,metode_bayar,catatan,Sesi_Waktu_id_slo) ON pre_order TO customer_user;
+GRANT INSERT (pre_order_id_pre_ord,Menu_id_menu,jumlah) ON pre_order_Menu TO customer_user;
+GRANT SELECT ON pembayaran TO customer_user;
+
+-- payment service
+
+GRANT CONNECT ON DATABASE postgres TO payment_service;
+GRANT USAGE ON SCHEMA public TO payment_service;
+GRANT INSERT ON pembayaran TO payment_service;
+GRANT UPDATE (status, kode_unik, url_bayar, expired_at, paid_at) ON pembayaran TO payment_service;
+GRANT UPDATE (status_bayar, url_bukti_bayar, updated_at) ON pre_order TO payment_service;
+GRANT SELECT ON pre_order, pembayaran, Payment_gateway TO payment_service;
