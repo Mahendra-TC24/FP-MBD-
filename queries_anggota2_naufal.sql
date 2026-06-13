@@ -1,12 +1,7 @@
--- =====================================================
 -- QUERY ANGGOTA 2 - MUHAMMAD NAUFAL HADAYA SETIAWAN (5025241181)
--- Final Project K-RUN - Manajemen Basis Data (B)
--- =====================================================
 
--- =====================================================
 -- 1. QUERY SEARCHING (JOIN) #1
 -- Daftar order per sesi waktu dengan detail mahasiswa dan kantin
--- =====================================================
 
 SELECT 
     sw.label AS sesi,
@@ -26,11 +21,8 @@ JOIN mahasiswa m ON po.mahasiswa_id_us = m.id_user
 WHERE sw.is_active = TRUE
 ORDER BY sw.label, k.nama_kantin, po.tanggal_ambil DESC;
 
--- =====================================================
 -- 2. QUERY SEARCHING (JOIN) #2
 -- Revenue per kantin per bulan (pendapatan bulanan)
--- =====================================================
-
 SELECT 
     k.nama_kantin,
     k.lokasi,
@@ -46,11 +38,8 @@ WHERE po.status_bayar = 'paid'
 GROUP BY k.nama_kantin, k.lokasi, TO_CHAR(po.tanggal_ambil, 'YYYY-MM')
 ORDER BY k.nama_kantin, bulan;
 
--- =====================================================
 -- 3. VIEW #1
 -- v_status_pembayaran: Status pembayaran lengkap dengan detail order dan gateway
--- =====================================================
-
 CREATE OR REPLACE VIEW v_status_pembayaran AS
 SELECT 
     pb.id_pembayaran,
@@ -72,10 +61,8 @@ JOIN mahasiswa m ON po.mahasiswa_id_us = m.id_user
 JOIN Payment_gateway pg ON pb.Payment_gateway = pg.id_metode
 ORDER BY pb.expired_at DESC;
 
--- =====================================================
 -- 4. VIEW #2
 -- v_kantin_rating: Kantin dengan rating, jumlah order, dan pemilik
--- =====================================================
 
 CREATE OR REPLACE VIEW v_kantin_rating AS
 SELECT 
@@ -97,10 +84,8 @@ GROUP BY k.id_kantin, k.nama_kantin, k.lokasi, k.rating,
          pk.nama, pk.no_hp, k.jam_buka, k.jam_tutup
 ORDER BY k.rating DESC;
 
--- =====================================================
 -- 5. TRIGGER #1
 -- trg_auto_expired_bayar: Set expired_at otomatis 24 jam setelah pembayaran dibuat
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_trg_auto_expired_bayar()
 RETURNS TRIGGER AS $$
@@ -117,10 +102,8 @@ BEFORE INSERT ON pembayaran
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_auto_expired_bayar();
 
--- =====================================================
 -- 6. TRIGGER #2
 -- trg_log_status_change: Log setiap perubahan status order ke tabel log
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_trg_log_status_change()
 RETURNS TRIGGER AS $$
@@ -138,10 +121,8 @@ AFTER UPDATE OF status ON pre_order
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_log_status_change();
 
--- =====================================================
 -- 7. FUNCTION #1
 -- fn_cek_kapasitas_slot: Cek sisa kapasitas slot pada tanggal tertentu
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_cek_kapasitas_slot(
     p_id_slot VARCHAR,
@@ -180,10 +161,8 @@ $$ LANGUAGE plpgsql;
 -- Contoh pemanggilan:
 -- SELECT * FROM fn_cek_kapasitas_slot('SLT001', '2026-05-15');
 
--- =====================================================
 -- 8. PROCEDURE #1
 -- sp_proses_pembayaran: Procedure memproses pembayaran dan update status order
--- =====================================================
 
 CREATE OR REPLACE PROCEDURE sp_proses_pembayaran(
     p_id_pembayaran VARCHAR,

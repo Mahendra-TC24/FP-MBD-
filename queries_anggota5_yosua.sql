@@ -1,12 +1,8 @@
--- =====================================================
 -- QUERY ANGGOTA 5 - YOSUA HARES (5025221270)
 -- Final Project K-RUN - Manajemen Basis Data (B)
--- =====================================================
 
--- =====================================================
 -- 1. QUERY SEARCHING (JOIN) #1
 -- Histori order mahasiswa lengkap dengan daftar menu dan total harga
--- =====================================================
 
 SELECT 
     m.nama AS nama_mahasiswa,
@@ -25,10 +21,8 @@ JOIN Menu mn ON pom.Menu_id_menu = mn.id_menu
 GROUP BY m.nama, po.kode_order, po.tanggal_ambil, k.nama_kantin, po.total_harga, po.status
 ORDER BY po.tanggal_ambil DESC, m.nama;
 
--- =====================================================
 -- 2. QUERY SEARCHING (JOIN) #2
 -- Kantin dengan jumlah pembayaran yang berstatus failed/expired terbanyak
--- =====================================================
 
 SELECT 
     k.nama_kantin,
@@ -45,10 +39,8 @@ WHERE pb.status IN ('failed', 'expired')
 GROUP BY k.nama_kantin, k.lokasi, pk.nama
 ORDER BY jumlah_gagal DESC;
 
--- =====================================================
 -- 3. VIEW #1
 -- v_mahasiswa_aktif: Mahasiswa dengan total belanja dan status keaktifan
--- =====================================================
 
 CREATE OR REPLACE VIEW v_mahasiswa_aktif AS
 SELECT 
@@ -69,10 +61,8 @@ LEFT JOIN pre_order po ON m.id_user = po.mahasiswa_id_us
 GROUP BY m.id_user, m.nama, m.email, m.no_hp
 ORDER BY total_spending DESC;
 
--- =====================================================
 -- 4. VIEW #2
 -- v_payment_gateway_usage: Statistik penggunaan payment gateway
--- =====================================================
 
 CREATE OR REPLACE VIEW v_payment_gateway_usage AS
 SELECT 
@@ -88,10 +78,8 @@ LEFT JOIN pembayaran pb ON pg.id_metode = pb.Payment_gateway
 GROUP BY pg.id_metode, pg.nama, pg.tipe
 ORDER BY frekuensi_penggunaan DESC;
 
--- =====================================================
 -- 5. TRIGGER #1
 -- trg_cek_email_format: Validasi format email mahasiswa sebelum insert/update
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_trg_cek_email_format()
 RETURNS TRIGGER AS $$
@@ -114,10 +102,8 @@ BEFORE INSERT OR UPDATE ON mahasiswa
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_cek_email_format();
 
--- =====================================================
 -- 6. TRIGGER #2
 -- trg_auto_set_updated_at: Auto set updated_at saat data pre_order diubah
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_trg_auto_set_updated_at()
 RETURNS TRIGGER AS $$
@@ -132,10 +118,8 @@ BEFORE UPDATE ON pre_order
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_auto_set_updated_at();
 
--- =====================================================
 -- 7. FUNCTION #1
 -- fn_hitung_diskon: Menghitung diskon berdasarkan frekuensi belanja mahasiswa
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_hitung_diskon(
     p_id_mahasiswa VARCHAR,
@@ -175,10 +159,8 @@ $$ LANGUAGE plpgsql;
 -- Contoh pemanggilan:
 -- SELECT fn_hitung_diskon('USR001', 150000.00);
 
--- =====================================================
 -- 8. PROCEDURE #1
 -- sp_laporan_harian: Procedure untuk men-generate data laporan harian per kantin
--- =====================================================
 
 CREATE OR REPLACE PROCEDURE sp_laporan_harian(
     p_id_kantin VARCHAR,

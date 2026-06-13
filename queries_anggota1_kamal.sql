@@ -1,12 +1,8 @@
--- =====================================================
 -- QUERY ANGGOTA 1 - KAMAL ZAKY ADINATA (5025241153)
 -- Final Project K-RUN - Manajemen Basis Data (B)
--- =====================================================
 
--- =====================================================
 -- 1. QUERY SEARCHING (JOIN) #1
 -- Total spending per mahasiswa beserta nama kantin yang paling sering dipesan
--- =====================================================
 
 SELECT 
     m.id_user,
@@ -22,10 +18,8 @@ WHERE po.status = 'completed'
 GROUP BY m.id_user, m.nama, k.nama_kantin
 ORDER BY total_spending DESC;
 
--- =====================================================
 -- 2. QUERY SEARCHING (JOIN) #2
 -- Menu terlaris di setiap kantin berdasarkan jumlah item dipesan
--- =====================================================
 
 SELECT 
     k.nama_kantin,
@@ -41,10 +35,8 @@ GROUP BY k.nama_kantin, k.lokasi, mn.nama_menu, mn.harga
 ORDER BY total_dipesan DESC
 LIMIT 20;
 
--- =====================================================
 -- 3. VIEW #1
 -- v_ringkasan_order: Ringkasan order lengkap dengan info mahasiswa dan kantin
--- =====================================================
 
 CREATE OR REPLACE VIEW v_ringkasan_order AS
 SELECT 
@@ -68,10 +60,8 @@ JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
 JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
 ORDER BY po.created_at DESC;
 
--- =====================================================
 -- 4. VIEW #2
 -- v_menu_populer: Menu paling populer per kantin dengan total pemesanan
--- =====================================================
 
 CREATE OR REPLACE VIEW v_menu_populer AS
 SELECT 
@@ -92,10 +82,8 @@ GROUP BY k.id_kantin, k.nama_kantin, mn.id_menu, mn.nama_menu,
          km.nama_kategori, mn.harga, mn.stok_hari_ini, mn.terjual_hari_ini
 ORDER BY total_dipesan DESC;
 
--- =====================================================
 -- 5. TRIGGER #1
 -- trg_update_stok: Auto kurangi stok_hari_ini saat ada item ditambahkan ke order
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_trg_update_stok()
 RETURNS TRIGGER AS $$
@@ -118,10 +106,8 @@ AFTER INSERT ON pre_order_Menu
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_update_stok();
 
--- =====================================================
 -- 6. TRIGGER #2
 -- trg_update_terjual: Auto update terjual_hari_ini saat order status jadi 'completed'
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_trg_update_terjual()
 RETURNS TRIGGER AS $$
@@ -144,10 +130,8 @@ FOR EACH ROW
 WHEN (NEW.status = 'completed')
 EXECUTE FUNCTION fn_trg_update_terjual();
 
--- =====================================================
 -- 7. FUNCTION #1
 -- fn_hitung_total_order: Menghitung total harga order berdasarkan items yang dipesan
--- =====================================================
 
 CREATE OR REPLACE FUNCTION fn_hitung_total_order(p_id_pre_order VARCHAR)
 RETURNS DECIMAL(13,2) AS $$
@@ -166,10 +150,8 @@ $$ LANGUAGE plpgsql;
 -- Contoh pemanggilan:
 -- SELECT fn_hitung_total_order('PRE001');
 
--- =====================================================
 -- 8. PROCEDURE #1
 -- sp_buat_pre_order: Procedure untuk membuat pre-order baru lengkap
--- =====================================================
 
 CREATE OR REPLACE PROCEDURE sp_buat_pre_order(
     p_id_pre_order VARCHAR,
