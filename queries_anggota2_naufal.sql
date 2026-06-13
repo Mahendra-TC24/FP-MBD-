@@ -1,9 +1,10 @@
 -- QUERY ANGGOTA 2 - MUHAMMAD NAUFAL HADAYA SETIAWAN (5025241181)
 
 -- 1. QUERY SEARCHING (JOIN) #1
--- Slot waktu paling ramai untuk membantu kantin menyiapkan kapasitas layanan
+-- Slot waktu paling ramai pada tanggal tertentu untuk membantu kantin menyiapkan kapasitas layanan
 
 SELECT
+    po.tanggal_ambil,
     k.nama_kantin,
     k.lokasi,
     sw.label AS sesi,
@@ -15,8 +16,9 @@ SELECT
 FROM pre_order po
 JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
 JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
-WHERE po.status NOT IN ('cancelled') AND po.tanggal_ambil = CURRENT_DATE
-GROUP BY k.nama_kantin, k.lokasi, sw.label, sw.jam_mulai, sw.jam_selesai, sw.kapasitas_order
+WHERE po.status NOT IN ('cancelled')
+  AND po.tanggal_ambil = DATE '2026-05-28'
+GROUP BY po.tanggal_ambil, k.nama_kantin, k.lokasi, sw.label, sw.jam_mulai, sw.jam_selesai, sw.kapasitas_order
 ORDER BY total_order DESC;
 
 -- 2. QUERY SEARCHING (JOIN) #2
