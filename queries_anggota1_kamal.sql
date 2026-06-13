@@ -51,6 +51,8 @@ JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
 JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
 ORDER BY po.created_at DESC;
 
+select * from v_ringkasan_order;
+
 -- 4
 CREATE OR REPLACE VIEW v_menu_populer AS
 SELECT 
@@ -69,6 +71,7 @@ JOIN Menu mn ON km.id_categori = mn.Kategori_Menu
 LEFT JOIN pre_order_Menu pom ON mn.id_menu = pom.Menu_id_menu
 GROUP BY k.id_kantin, k.nama_kantin, mn.id_menu, mn.nama_menu, km.nama_kategori, mn.harga, mn.stok_hari_ini, mn.terjual_hari_ini ORDER BY total_dipesan DESC;
 
+select * from v_menu_populer;
 -- 5
 CREATE OR REPLACE FUNCTION fn_trg_update_stok()
 RETURNS TRIGGER AS $$
@@ -91,6 +94,21 @@ AFTER INSERT ON pre_order_Menu
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_update_stok();
 
+SELECT * FROM menu;
+SELECT * FROM pre_order_Menu;
+SELECT * FROM pre_order;
+INSERT INTO pre_order_Menu (
+    pre_order_id_pre_ord,
+    Menu_id_menu,
+    jumlah,
+    harga_satuan
+)
+VALUES (
+    'PRE101',
+    'MNU001',
+    2,
+    15000
+);
 -- 6
 CREATE OR REPLACE FUNCTION fn_trg_update_terjual()
 RETURNS TRIGGER AS $$
@@ -113,6 +131,13 @@ FOR EACH ROW
 WHEN (NEW.status = 'completed')
 EXECUTE FUNCTION fn_trg_update_terjual();
 
+select * from pre_order;
+select * from pre_order_menu;
+select * from menu;
+UPDATE pre_order
+SET status = 'completed'
+WHERE id_pre_order = 'PRE019';
+
 -- 7
 CREATE OR REPLACE FUNCTION fn_hitung_total_order(p_id_pre_order VARCHAR)
 RETURNS DECIMAL(13,2) AS $$
@@ -127,57 +152,186 @@ BEGIN
     RETURN v_total;
 END;
 $$ LANGUAGE plpgsql;
--- 8
 
-CREATE OR REPLACE PROCEDURE sp_buat_pre_order(
-    p_id_pre_order VARCHAR,
-    p_mahasiswa_id VARCHAR,
-    p_sesi_waktu_id VARCHAR,
-    p_tanggal_ambil DATE,
-    p_metode_bayar VARCHAR,
-    p_catatan TEXT DEFAULT ''
+select * from pre_order;
+select * from pre_order_menu;
+
+SELECT fn_hitung_total_order('PRE001');
+-- 8
+DROP PROCEDURE IF EXISTS sp_buat_pre_order_lengkap;
+CREATE OR REPLACE PROCEDURE sp_buat_pre_order_lengkap(
+    IN p_id_pre_order VARCHAR,
+    IN p_mahasiswa_id VARCHAR,
+    IN p_sesi_waktu_id VARCHAR,
+    IN p_tanggal_ambil DATE,
+    IN p_metode_bayar VARCHAR,
+    IN p_catatan TEXT,
+    IN p_menu_ids VARCHAR[],
+    IN p_jumlahs INT[],
+    OUT o_kode_order VARCHAR,
+    OUT o_subtotal DECIMAL(13,2),
+    OUT o_total_harga DECIMAL(13,2)
 )
-LANGUAGE plpgsql AS $$
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
-    v_kode_order VARCHAR(50);
     v_kapasitas INT;
     v_jumlah_order INT;
+    v_len_menu INT;
+    v_len_jumlah INT;
+    v_harga DECIMAL(10,2);
+    v_stok INT;
+    i INT;
 BEGIN
-    -- Cek kapasitas sesi waktu
-    SELECT kapasitas_order INTO v_kapasitas
-    FROM Sesi_Waktu 
-    WHERE id_slot = p_sesi_waktu_id AND is_active = TRUE;
-    
+    v_len_menu := array_length(p_menu_ids, 1);
+    v_len_jumlah := array_length(p_jumlahs, 1);
+
+    IF v_len_menu IS NULL OR v_len_menu = 0 THEN
+        RAISE EXCEPTION 'Daftar menu tidak boleh kosong';
+    END IF;
+
+    IF v_len_menu IS DISTINCT FROM v_len_jumlah THEN
+        RAISE EXCEPTION 'Jumlah menu dan jumlah pesanan tidak sesuai';
+    END IF;
+
+    SELECT kapasitas_order
+    INTO v_kapasitas
+    FROM Sesi_Waktu
+    WHERE id_slot = p_sesi_waktu_id
+      AND is_active = TRUE;
+
     IF v_kapasitas IS NULL THEN
         RAISE EXCEPTION 'Sesi waktu % tidak ditemukan atau tidak aktif', p_sesi_waktu_id;
     END IF;
-    
-    -- Hitung jumlah order yang sudah ada di sesi tersebut
-    SELECT COUNT(*) INTO v_jumlah_order
+
+    SELECT COUNT(*)
+    INTO v_jumlah_order
     FROM pre_order
     WHERE Sesi_Waktu_id_slo = p_sesi_waktu_id
       AND tanggal_ambil = p_tanggal_ambil
       AND status NOT IN ('cancelled');
-    
+
     IF v_jumlah_order >= v_kapasitas THEN
-        RAISE EXCEPTION 'Kapasitas sesi waktu % sudah penuh (%/%)', 
+        RAISE EXCEPTION 'Kapasitas sesi waktu % sudah penuh (%/%)',
             p_sesi_waktu_id, v_jumlah_order, v_kapasitas;
     END IF;
-    
-    v_kode_order := 'KR-' || TO_CHAR(p_tanggal_ambil, 'YYYYMMDD') || '-' || 
-                    LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0');
-    
+
+    LOOP
+        o_kode_order := 'KR-' || TO_CHAR(p_tanggal_ambil, 'YYYYMMDD') || '-' ||
+                        LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0');
+
+        EXIT WHEN NOT EXISTS (
+            SELECT 1
+            FROM pre_order
+            WHERE kode_order = o_kode_order
+        );
+    END LOOP;
+
     INSERT INTO pre_order (
-        id_pre_order, kode_order, tanggal_ambil, status, subtotal, 
-        total_harga, metode_bayar, status_bayar, url_bukti_bayar, 
-        catatan, created_at, updated_at, mahasiswa_id_us, Sesi_Waktu_id_slo
-    ) VALUES (
-        p_id_pre_order, v_kode_order, p_tanggal_ambil, 'pending', 0.00,
-        0.00, p_metode_bayar, 'unpaid', '',
-        p_catatan, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, p_mahasiswa_id, p_sesi_waktu_id
+        id_pre_order,
+        kode_order,
+        tanggal_ambil,
+        status,
+        subtotal,
+        total_harga,
+        metode_bayar,
+        status_bayar,
+        url_bukti_bayar,
+        catatan,
+        created_at,
+        updated_at,
+        mahasiswa_id_us,
+        Sesi_Waktu_id_slo
+    )
+    VALUES (
+        p_id_pre_order,
+        o_kode_order,
+        p_tanggal_ambil,
+        'pending',
+        0.00,
+        0.00,
+        p_metode_bayar,
+        'unpaid',
+        '',
+        p_catatan,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        p_mahasiswa_id,
+        p_sesi_waktu_id
     );
-    
-    RAISE NOTICE 'Pre-order % berhasil dibuat dengan kode %', p_id_pre_order, v_kode_order;
+
+    FOR i IN 1..v_len_menu LOOP
+        IF p_jumlahs[i] IS NULL OR p_jumlahs[i] <= 0 THEN
+            RAISE EXCEPTION 'Jumlah menu % harus lebih dari 0', p_menu_ids[i];
+        END IF;
+
+        SELECT mn.harga, mn.stok_hari_ini
+        INTO v_harga, v_stok
+        FROM Menu mn
+        JOIN Kategori_Menu km ON mn.Kategori_Menu = km.id_categori
+        JOIN Sesi_Waktu sw ON sw.Kantin_id_kantin = km.Kantin_id_kantin
+        WHERE mn.id_menu = p_menu_ids[i]
+          AND sw.id_slot = p_sesi_waktu_id
+          AND mn.is_available = TRUE;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Menu % tidak ditemukan, tidak aktif, atau tidak sesuai dengan kantin pada sesi %',
+                p_menu_ids[i], p_sesi_waktu_id;
+        END IF;
+
+        IF v_stok < p_jumlahs[i] THEN
+            RAISE EXCEPTION 'Stok menu % tidak cukup. Stok tersedia %, diminta %',
+                p_menu_ids[i], v_stok, p_jumlahs[i];
+        END IF;
+
+        INSERT INTO pre_order_Menu (
+            pre_order_id_pre_ord,
+            Menu_id_menu,
+            jumlah,
+            harga_satuan
+        )
+        VALUES (
+            p_id_pre_order,
+            p_menu_ids[i],
+            p_jumlahs[i],
+            v_harga
+        );
+    END LOOP;
+
+    SELECT COALESCE(SUM(jumlah * harga_satuan), 0)
+    INTO o_subtotal
+    FROM pre_order_Menu
+    WHERE pre_order_id_pre_ord = p_id_pre_order;
+
+    o_total_harga := o_subtotal;
+
+    UPDATE pre_order
+    SET subtotal = o_subtotal,
+        total_harga = o_total_harga,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id_pre_order = p_id_pre_order;
+
+    RAISE NOTICE 'Pre-order % berhasil dibuat dengan kode %, subtotal %, total harga %',
+        p_id_pre_order, o_kode_order, o_subtotal, o_total_harga;
 END;
 $$;
 
+select * from sesi_waktu;
+select * from mahasiswa;
+select * from pre_order;
+select * from menu;
+CALL sp_buat_pre_order_lengkap(
+    'PRE902',
+    'USR001',
+    'SLT001',
+    DATE '2026-06-15',
+    'QRIS',
+    'Tidak pakai sambal',
+    ARRAY['MNU001', 'MNU002']::VARCHAR[],
+    ARRAY[2, 1]::INT[],
+    NULL,
+    NULL,
+    NULL
+);
