@@ -1,12 +1,11 @@
--- =====================================================
 -- QUERY ANGGOTA 4 - RADITYA ZHAFRAN PRANUJA (5025241120)
 -- Final Project K-RUN - Manajemen Basis Data (B)
--- =====================================================
 
--- =====================================================
+
+
 -- 1. QUERY SEARCHING (JOIN) #1
 -- Detail pembayaran dengan nama mahasiswa, nama kantin, dan metode bayar
--- =====================================================
+
 
 SELECT 
     pb.id_pembayaran,
@@ -26,10 +25,10 @@ JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
 JOIN Payment_gateway pg ON pb.Payment_gateway = pg.id_metode
 ORDER BY pb.paid_at DESC NULLS LAST;
 
--- =====================================================
+
 -- 2. QUERY SEARCHING (JOIN) #2
 -- Menu yang belum pernah dipesan sama sekali
--- =====================================================
+
 
 SELECT 
     mn.id_menu,
@@ -45,10 +44,10 @@ LEFT JOIN pre_order_Menu pom ON mn.id_menu = pom.Menu_id_menu
 WHERE pom.pre_order_id_pre_ord IS NULL
 ORDER BY k.nama_kantin, mn.nama_menu;
 
--- =====================================================
+
 -- 3. VIEW #1
 -- v_sesi_aktif: Sesi waktu yang aktif beserta info kantin dan sisa kapasitas
--- =====================================================
+
 
 CREATE OR REPLACE VIEW v_sesi_aktif AS
 SELECT 
@@ -71,10 +70,10 @@ GROUP BY sw.id_slot, sw.label, sw.jam_mulai, sw.jam_selesai,
          k.nama_kantin, k.lokasi, sw.kapasitas_order
 ORDER BY k.nama_kantin, sw.jam_mulai;
 
--- =====================================================
+
 -- 4. VIEW #2
 -- v_order_harian: Rekap order per hari per kantin
--- =====================================================
+
 
 CREATE OR REPLACE VIEW v_order_harian AS
 SELECT 
@@ -90,10 +89,10 @@ JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
 GROUP BY po.tanggal_ambil, k.nama_kantin
 ORDER BY po.tanggal_ambil DESC, k.nama_kantin;
 
--- =====================================================
+
 -- 5. TRIGGER #1
 -- trg_prevent_order_inactive_menu: Cegah pesanan untuk menu yang is_available = FALSE
--- =====================================================
+
 
 CREATE OR REPLACE FUNCTION fn_trg_prevent_order_inactive_menu()
 RETURNS TRIGGER AS $$
@@ -118,10 +117,10 @@ BEFORE INSERT ON pre_order_Menu
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_prevent_order_inactive_menu();
 
--- =====================================================
+
 -- 6. TRIGGER #2
 -- trg_auto_update_rating: Auto update rating kantin berdasarkan jumlah order selesai
--- =====================================================
+
 
 CREATE OR REPLACE FUNCTION fn_trg_auto_update_rating()
 RETURNS TRIGGER AS $$
@@ -161,10 +160,10 @@ AFTER UPDATE OF status ON pre_order
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_auto_update_rating();
 
--- =====================================================
+
 -- 7. FUNCTION #1
 -- fn_format_kode_order: Generate kode order unik dengan format KRN-YYYYMMDD-XXXX
--- =====================================================
+
 
 CREATE OR REPLACE FUNCTION fn_format_kode_order(p_tanggal DATE)
 RETURNS VARCHAR AS $$
@@ -185,10 +184,10 @@ $$ LANGUAGE plpgsql;
 -- Contoh pemanggilan:
 -- SELECT fn_format_kode_order('2026-06-15');
 
--- =====================================================
+
 -- 8. PROCEDURE #1
 -- sp_batalkan_order: Procedure untuk membatalkan order dengan alasan
--- =====================================================
+
 
 CREATE OR REPLACE PROCEDURE sp_batalkan_order(
     p_id_pre_order VARCHAR,

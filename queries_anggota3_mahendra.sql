@@ -1,12 +1,10 @@
--- =====================================================
 -- QUERY ANGGOTA 3 - MAHENDRA AGUNG D (5025241032)
 -- Final Project K-RUN - Manajemen Basis Data (B)
--- =====================================================
 
--- =====================================================
+
 -- 1. QUERY SEARCHING (JOIN) #1
 -- Kantin dengan menu terbanyak beserta detail kategori dan pemilik
--- =====================================================
+
 
 SELECT 
     k.nama_kantin,
@@ -23,10 +21,10 @@ WHERE mn.is_available = TRUE
 GROUP BY k.nama_kantin, k.lokasi, pk.nama, km.nama_kategori
 ORDER BY jumlah_menu DESC, k.nama_kantin;
 
--- =====================================================
+
 -- 2. QUERY SEARCHING (JOIN) #2
 -- Mahasiswa yang order lebih dari 3x dengan detail kantin favorit
--- =====================================================
+
 
 SELECT 
     m.id_user,
@@ -44,10 +42,10 @@ GROUP BY m.id_user, m.nama, m.email, k.nama_kantin
 HAVING COUNT(po.id_pre_order) > 3
 ORDER BY total_order DESC;
 
--- =====================================================
+
 -- 3. VIEW #1
 -- v_stok_menu_harian: Status stok menu harian per kantin
--- =====================================================
+
 
 CREATE OR REPLACE VIEW v_stok_menu_harian AS
 SELECT 
@@ -71,10 +69,10 @@ JOIN Kategori_Menu km ON mn.Kategori_Menu = km.id_categori
 JOIN Kantin k ON km.Kantin_id_kantin = k.id_kantin
 ORDER BY k.nama_kantin, mn.stok_hari_ini ASC;
 
--- =====================================================
+
 -- 4. VIEW #2
 -- v_pendapatan_kantin: Rekapitulasi pendapatan per kantin
--- =====================================================
+
 
 CREATE OR REPLACE VIEW v_pendapatan_kantin AS
 SELECT 
@@ -95,10 +93,10 @@ LEFT JOIN pre_order po ON sw.id_slot = po.Sesi_Waktu_id_slo
 GROUP BY k.id_kantin, k.nama_kantin, k.lokasi, pk.nama
 ORDER BY total_pendapatan DESC;
 
--- =====================================================
+
 -- 5. TRIGGER #1
 -- trg_set_default_rating: Set default rating 0.0 saat kantin baru dibuat
--- =====================================================
+
 
 CREATE OR REPLACE FUNCTION fn_trg_set_default_rating()
 RETURNS TRIGGER AS $$
@@ -115,10 +113,10 @@ BEFORE INSERT ON Kantin
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_set_default_rating();
 
--- =====================================================
+
 -- 6. TRIGGER #2
 -- trg_validasi_jam_order: Validasi bahwa sesi waktu masih aktif saat order dibuat
--- =====================================================
+
 
 CREATE OR REPLACE FUNCTION fn_trg_validasi_jam_order()
 RETURNS TRIGGER AS $$
@@ -144,10 +142,10 @@ BEFORE INSERT ON pre_order
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_validasi_jam_order();
 
--- =====================================================
+
 -- 7. FUNCTION #1
 -- fn_get_kantin_terlaris: Return kantin dengan order terbanyak dalam periode tertentu
--- =====================================================
+
 
 CREATE OR REPLACE FUNCTION fn_get_kantin_terlaris(
     p_tanggal_mulai DATE DEFAULT '2026-01-01',
@@ -182,10 +180,10 @@ $$ LANGUAGE plpgsql;
 -- Contoh pemanggilan:
 -- SELECT * FROM fn_get_kantin_terlaris('2026-04-01', '2026-06-30');
 
--- =====================================================
+
 -- 8. PROCEDURE #1
 -- sp_reset_stok_harian: Procedure reset stok harian semua menu
--- =====================================================
+
 
 CREATE OR REPLACE PROCEDURE sp_reset_stok_harian(
     p_id_kantin VARCHAR DEFAULT NULL

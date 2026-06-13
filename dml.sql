@@ -1,11 +1,7 @@
--- =====================================================
 -- DML - DATA DUMMY K-RUN SISTEM PRE-ORDER KANTIN ITS
 -- Kelompok 8 - Manajemen Basis Data (B)
--- =====================================================
 
--- =====================================================
 -- INSERT mahasiswa (50 rows)
--- =====================================================
 
 INSERT INTO mahasiswa VALUES ('USR001', 'Prasetyo Setiawan', 'prasetyo.setiawan36@student.its.ac.id', '085339958838', '2026-02-24 09:43:47');
 INSERT INTO mahasiswa VALUES ('USR002', 'Faisal Wibowo', 'faisal.wibowo5@student.its.ac.id', '081122575562', '2026-02-08 16:38:01');
@@ -58,9 +54,7 @@ INSERT INTO mahasiswa VALUES ('USR048', 'Ilham Susanto', 'ilham.susanto91@studen
 INSERT INTO mahasiswa VALUES ('USR049', 'Firman Wicaksono', 'firman.wicaksono47@student.its.ac.id', '088119391725', '2026-03-20 13:42:54');
 INSERT INTO mahasiswa VALUES ('USR050', 'Hendra Valentino', 'hendra.valentino40@student.its.ac.id', '088153779528', '2026-04-23 12:35:08');
 
--- =====================================================
 -- INSERT Pemilik_Kantin (40 rows)
--- =====================================================
 
 INSERT INTO Pemilik_Kantin VALUES ('PMK001', 'Siti Aminah', 'sitiaminah25@gmail.com', '088199245317', 'hashed_pw_pmk001');
 INSERT INTO Pemilik_Kantin VALUES ('PMK002', 'Bambang Sutrisno', 'bambangsutrisno49@gmail.com', '083192613013', 'hashed_pw_pmk002');
@@ -103,9 +97,7 @@ INSERT INTO Pemilik_Kantin VALUES ('PMK038', 'Bapak Santoso', 'bapaksantoso54@gm
 INSERT INTO Pemilik_Kantin VALUES ('PMK039', 'Bu Rusmini', 'burusmini90@gmail.com', '081187267850', 'hashed_pw_pmk039');
 INSERT INTO Pemilik_Kantin VALUES ('PMK040', 'Pak Mujianto', 'pakmujianto49@gmail.com', '088310791358', 'hashed_pw_pmk040');
 
--- =====================================================
 -- INSERT Kantin (40 rows)
--- =====================================================
 
 INSERT INTO Kantin VALUES ('KNT001', 'Warung Nasi Bu Sari', 'Kantin Pusat ITS, Jl. Teknik Mesin No.173, Keputih, Sukolilo, Surabaya, Jawa Timur 60115', '07:00:00', '16:00:00', 4.5, 'PMK001');
 INSERT INTO Kantin VALUES ('KNT002', 'Bakso Pak Rudi', 'Kantin Pusat ITS, Jl. Teknik Mesin No.173, Keputih, Sukolilo, Surabaya, Jawa Timur 60115', '08:00:00', '17:00:00', 4.4, 'PMK002');
@@ -148,9 +140,7 @@ INSERT INTO Kantin VALUES ('KNT038', 'Warkop Elektro ITS', 'Kantin Teknik Elektr
 INSERT INTO Kantin VALUES ('KNT039', 'Nasi Uduk Elektro', 'Kantin Teknik Elektro ITS, Departemen Teknik Elektro ITS, Gedung A/B/C/AJ, Kampus ITS Sukolilo, Surabaya 60111', '07:00:00', '16:00:00', 4.5, 'PMK039');
 INSERT INTO Kantin VALUES ('KNT040', 'Kedai DKV Kreatif', 'Kantin DKV ITS, Area Departemen DKV, Gedung Desain Produk Industri ITS, Jl. Raya ITS, Sukolilo, Surabaya 60111', '08:00:00', '17:00:00', 4.4, 'PMK040');
 
--- =====================================================
 -- INSERT Sesi_Waktu (80 rows - 2 sesi per kantin)
--- =====================================================
 
 INSERT INTO Sesi_Waktu VALUES ('SLT001', 'Siang', '11:00:00', '13:30:00', 28, TRUE, 'KNT001');
 INSERT INTO Sesi_Waktu VALUES ('SLT002', 'Sore', '15:30:00', '18:00:00', 31, TRUE, 'KNT001');
@@ -233,9 +223,7 @@ INSERT INTO Sesi_Waktu VALUES ('SLT078', 'Sore', '15:30:00', '18:00:00', 36, TRU
 INSERT INTO Sesi_Waktu VALUES ('SLT079', 'Siang', '11:00:00', '13:30:00', 21, TRUE, 'KNT040');
 INSERT INTO Sesi_Waktu VALUES ('SLT080', 'Sore', '15:30:00', '18:00:00', 36, TRUE, 'KNT040');
 
--- =====================================================
 -- INSERT Kategori_Menu (40 rows)
--- =====================================================
 
 INSERT INTO Kategori_Menu VALUES ('KAT001', 'Nasi', 'Aneka menu berbahan dasar nasi', 'KNT001');
 INSERT INTO Kategori_Menu VALUES ('KAT002', 'Mie', 'Aneka mie dan kwetiau', 'KNT002');
@@ -278,9 +266,7 @@ INSERT INTO Kategori_Menu VALUES ('KAT038', 'Tongseng', 'Tongseng dan tengkleng'
 INSERT INTO Kategori_Menu VALUES ('KAT039', 'Gudeg', 'Gudeg khas Jogja', 'KNT039');
 INSERT INTO Kategori_Menu VALUES ('KAT040', 'Siomay', 'Siomay dan batagor', 'KNT040');
 
--- =====================================================
 -- INSERT Menu (85 rows)
--- =====================================================
 
 INSERT INTO Menu VALUES ('MNU001', 'Nasi Goreng Spesial', 'Nasi goreng dengan telur, ayam, dan sayuran', 15000.00, TRUE, 41, 9, 'KAT024');
 INSERT INTO Menu VALUES ('MNU002', 'Nasi Goreng Seafood', 'Nasi goreng dengan udang dan cumi', 18000.00, TRUE, 35, 17, 'KAT024');
@@ -368,9 +354,7 @@ INSERT INTO Menu VALUES ('MNU083', 'Sego Sambel Pak Kumis', 'Nasi putih aneka sa
 INSERT INTO Menu VALUES ('MNU084', 'Teh Tarik', 'Teh tarik khas Malaysia', 8000.00, TRUE, 49, 7, 'KAT009');
 INSERT INTO Menu VALUES ('MNU085', 'Es Dawet Ireng', 'Es dawet hitam khas Purworejo', 8000.00, TRUE, 41, 18, 'KAT008');
 
--- =====================================================
 -- INSERT Payment_gateway (40 rows)
--- =====================================================
 
 INSERT INTO Payment_gateway VALUES ('PAY001', 'GoPay', 'E-Wallet', FALSE);
 INSERT INTO Payment_gateway VALUES ('PAY002', 'OVO', 'E-Wallet', TRUE);
@@ -413,9 +397,7 @@ INSERT INTO Payment_gateway VALUES ('PAY038', 'Alfamidi', 'Retail', TRUE);
 INSERT INTO Payment_gateway VALUES ('PAY039', 'Visa Credit Card', 'Kartu Kredit', TRUE);
 INSERT INTO Payment_gateway VALUES ('PAY040', 'Mastercard Credit Card', 'Kartu Kredit', TRUE);
 
--- =====================================================
 -- INSERT pre_order (120 rows)
--- =====================================================
 
 INSERT INTO pre_order VALUES ('PRE001', 'KR-20260401-3240', '2026-04-13', 'cancelled', 44000.00, 44000.00, 'e-wallet', 'expired', '', '', '2026-04-13 07:58:00', '2026-04-13 09:58:00', 'USR021', 'SLT054');
 INSERT INTO pre_order VALUES ('PRE002', 'KR-20260402-3877', '2026-04-26', 'confirmed', 57000.00, 57000.00, 'va', 'paid', 'https://krun.its.ac.id/bukti/PRE002', '', '2026-04-26 10:04:00', '2026-04-26 11:04:00', 'USR049', 'SLT029');
@@ -538,9 +520,7 @@ INSERT INTO pre_order VALUES ('PRE118', 'KR-20260728-7046', '2026-05-29', 'cance
 INSERT INTO pre_order VALUES ('PRE119', 'KR-20260729-9105', '2026-05-05', 'preparing', 59000.00, 59000.00, 'va', 'unpaid', '', 'Tidak pakai sambal', '2026-05-05 10:01:00', '2026-05-05 10:01:00', 'USR011', 'SLT057');
 INSERT INTO pre_order VALUES ('PRE120', 'KR-20260730-8479', '2026-04-01', 'cancelled', 98000.00, 98000.00, 'va', 'expired', '', 'Extra pedas level 5', '2026-03-31 08:03:00', '2026-03-31 11:03:00', 'USR041', 'SLT040');
 
--- =====================================================
 -- INSERT pre_order_Menu (200+ rows)
--- =====================================================
 
 INSERT INTO pre_order_Menu VALUES ('PRE001', 'MNU055', 1, 7000.00);
 INSERT INTO pre_order_Menu VALUES ('PRE001', 'MNU084', 3, 8000.00);
@@ -830,9 +810,7 @@ INSERT INTO pre_order_Menu VALUES ('PRE120', 'MNU061', 2, 20000.00);
 
 -- Total pre_order_Menu rows: 285
 
--- =====================================================
 -- INSERT pembayaran (120 rows)
--- =====================================================
 
 INSERT INTO pembayaran VALUES ('PBY-PRE001-180', 'QRIS', 'pending', 75811.00, 'UNQ-698967', 'https://pay.krun.its.ac.id/PBY-PRE001-180', '2026-06-07 16:43:00', NULL, 'PRE001', 'PAY040');
 INSERT INTO pembayaran VALUES ('PBY-PRE002-250', 'OVO', 'expired', 32659.00, 'UNQ-275284', 'https://pay.krun.its.ac.id/PBY-PRE002-250', '2026-04-29 10:08:00', NULL, 'PRE002', 'PAY003');
@@ -955,6 +933,4 @@ INSERT INTO pembayaran VALUES ('PBY-PRE118-853', 'Mandiri VA', 'failed', 15297.0
 INSERT INTO pembayaran VALUES ('PBY-PRE119-478', 'ShopeePay', 'pending', 37102.00, 'UNQ-643042', 'https://pay.krun.its.ac.id/PBY-PRE119-478', '2026-05-18 13:30:00', NULL, 'PRE119', 'PAY030');
 INSERT INTO pembayaran VALUES ('PBY-PRE120-147', 'GoPay', 'failed', 23529.00, 'UNQ-837920', 'https://pay.krun.its.ac.id/PBY-PRE120-147', '2026-06-07 17:53:00', NULL, 'PRE120', 'PAY018');
 
--- =====================================================
 -- END OF DML
--- =====================================================
