@@ -1,13 +1,4 @@
--- =====================================================
--- QUERY ANGGOTA 1 - KAMAL ZAKY ADINATA (5025241153)
--- Final Project K-RUN - Manajemen Basis Data (B)
--- =====================================================
-
--- =====================================================
--- 1. QUERY SEARCHING (JOIN) #1
--- Total spending per mahasiswa beserta nama kantin yang paling sering dipesan
--- =====================================================
-
+-- 1
 SELECT 
     m.id_user,
     m.nama AS nama_mahasiswa,
@@ -22,11 +13,7 @@ WHERE po.status = 'completed'
 GROUP BY m.id_user, m.nama, k.nama_kantin
 ORDER BY total_spending DESC;
 
--- =====================================================
--- 2. QUERY SEARCHING (JOIN) #2
--- Menu terlaris di setiap kantin berdasarkan jumlah item dipesan
--- =====================================================
-
+-- 2
 SELECT 
     k.nama_kantin,
     k.lokasi,
@@ -41,11 +28,7 @@ GROUP BY k.nama_kantin, k.lokasi, mn.nama_menu, mn.harga
 ORDER BY total_dipesan DESC
 LIMIT 20;
 
--- =====================================================
--- 3. VIEW #1
--- v_ringkasan_order: Ringkasan order lengkap dengan info mahasiswa dan kantin
--- =====================================================
-
+-- 3
 CREATE OR REPLACE VIEW v_ringkasan_order AS
 SELECT 
     po.id_pre_order,
@@ -68,11 +51,7 @@ JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
 JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
 ORDER BY po.created_at DESC;
 
--- =====================================================
--- 4. VIEW #2
--- v_menu_populer: Menu paling populer per kantin dengan total pemesanan
--- =====================================================
-
+-- 4
 CREATE OR REPLACE VIEW v_menu_populer AS
 SELECT 
     k.id_kantin,
@@ -88,15 +67,9 @@ FROM Kantin k
 JOIN Kategori_Menu km ON k.id_kantin = km.Kantin_id_kantin
 JOIN Menu mn ON km.id_categori = mn.Kategori_Menu
 LEFT JOIN pre_order_Menu pom ON mn.id_menu = pom.Menu_id_menu
-GROUP BY k.id_kantin, k.nama_kantin, mn.id_menu, mn.nama_menu, 
-         km.nama_kategori, mn.harga, mn.stok_hari_ini, mn.terjual_hari_ini
-ORDER BY total_dipesan DESC;
+GROUP BY k.id_kantin, k.nama_kantin, mn.id_menu, mn.nama_menu, km.nama_kategori, mn.harga, mn.stok_hari_ini, mn.terjual_hari_ini ORDER BY total_dipesan DESC;
 
--- =====================================================
--- 5. TRIGGER #1
--- trg_update_stok: Auto kurangi stok_hari_ini saat ada item ditambahkan ke order
--- =====================================================
-
+-- 5
 CREATE OR REPLACE FUNCTION fn_trg_update_stok()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -118,11 +91,7 @@ AFTER INSERT ON pre_order_Menu
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_update_stok();
 
--- =====================================================
--- 6. TRIGGER #2
--- trg_update_terjual: Auto update terjual_hari_ini saat order status jadi 'completed'
--- =====================================================
-
+-- 6
 CREATE OR REPLACE FUNCTION fn_trg_update_terjual()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -144,11 +113,7 @@ FOR EACH ROW
 WHEN (NEW.status = 'completed')
 EXECUTE FUNCTION fn_trg_update_terjual();
 
--- =====================================================
--- 7. FUNCTION #1
--- fn_hitung_total_order: Menghitung total harga order berdasarkan items yang dipesan
--- =====================================================
-
+-- 7
 CREATE OR REPLACE FUNCTION fn_hitung_total_order(p_id_pre_order VARCHAR)
 RETURNS DECIMAL(13,2) AS $$
 DECLARE
@@ -162,14 +127,7 @@ BEGIN
     RETURN v_total;
 END;
 $$ LANGUAGE plpgsql;
-
--- Contoh pemanggilan:
--- SELECT fn_hitung_total_order('PRE001');
-
--- =====================================================
--- 8. PROCEDURE #1
--- sp_buat_pre_order: Procedure untuk membuat pre-order baru lengkap
--- =====================================================
+-- 8
 
 CREATE OR REPLACE PROCEDURE sp_buat_pre_order(
     p_id_pre_order VARCHAR,
@@ -206,11 +164,9 @@ BEGIN
             p_sesi_waktu_id, v_jumlah_order, v_kapasitas;
     END IF;
     
-    -- Generate kode order
     v_kode_order := 'KR-' || TO_CHAR(p_tanggal_ambil, 'YYYYMMDD') || '-' || 
                     LPAD(FLOOR(RANDOM() * 10000)::TEXT, 4, '0');
     
-    -- Insert pre_order
     INSERT INTO pre_order (
         id_pre_order, kode_order, tanggal_ambil, status, subtotal, 
         total_harga, metode_bayar, status_bayar, url_bukti_bayar, 
@@ -225,5 +181,3 @@ BEGIN
 END;
 $$;
 
--- Contoh pemanggilan:
--- CALL sp_buat_pre_order('PRE999', 'USR001', 'SLT001', '2026-07-01', 'e-wallet', 'Tidak pakai sambal');
