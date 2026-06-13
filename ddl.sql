@@ -1,7 +1,6 @@
--- =====================================================
 -- FINAL PROJECT K-RUN - MANAJEMEN BASIS DATA
 -- Kelompok 8 - Sistem Pre-order Makanan Kantin ITS
--- =====================================================
+
 
 -- Drop existing tables
 DROP TABLE IF EXISTS log_status_order CASCADE;
@@ -16,9 +15,9 @@ DROP TABLE IF EXISTS Pemilik_Kantin CASCADE;
 DROP TABLE IF EXISTS Payment_gateway CASCADE;
 DROP TABLE IF EXISTS mahasiswa CASCADE;
 
--- =====================================================
+
 -- CREATE TABLES
--- =====================================================
+
 
 CREATE TABLE mahasiswa (
     id_user VARCHAR(9) PRIMARY KEY,
@@ -147,9 +146,9 @@ CREATE TABLE log_status_order (
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- =====================================================
+
 -- CREATE INDEXES
--- =====================================================
+
 
 CREATE INDEX idx_preorder_mahasiswa ON pre_order(mahasiswa_id_us);
 CREATE INDEX idx_preorder_sesiwaktu ON pre_order(Sesi_Waktu_id_slo);
@@ -163,9 +162,9 @@ CREATE INDEX idx_kantin_pemilik ON Kantin(Pemilik_Kantin_id_p);
 CREATE INDEX idx_pembayaran_preorder ON pembayaran(pre_order_id_pre);
 CREATE INDEX idx_pembayaran_status ON pembayaran(status);
 
--- =====================================================
+
 -- CREATE USERS WITH DIFFERENT ACCESS RIGHTS
--- =====================================================
+
 
 -- ======================================
 -- Reset role
