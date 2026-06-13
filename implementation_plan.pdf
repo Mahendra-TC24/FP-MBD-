@@ -1,0 +1,173 @@
+# Final Project K-RUN - Sistem Pre-order Makanan Kantin ITS
+
+## Kelompok 8 - Manajemen Basis Data (B)
+
+**Anggota:**
+1. Kamal Zaky Adinata (5025241153)
+2. Muhammad Naufal Hadaya Setiawan (5025241181)
+3. Mahendra Agung D (5025241032)
+4. Raditya Zhafran Pranuja (5025241120)
+5. Yosua Hares (5025221270)
+
+---
+
+## Ringkasan Database
+
+Sistem **K-RUN** adalah aplikasi pre-order makanan di kantin ITS. PDM terdiri dari **10 tabel**:
+
+| Tabel | Tipe | Jumlah Data |
+|-------|------|-------------|
+| `mahasiswa` | Master | 50 baris |
+| `Pemilik_Kantin` | Master | 10 baris |
+| `Kantin` | Master | 10 baris |
+| `Sesi_Waktu` | Master | 40 baris (4 slot × 10 kantin) |
+| `Kategori_Menu` | Master | 25 baris |
+| `Menu` | Master | 80 baris |
+| `Payment_gateway` | Master | 8 baris |
+| `pre_order` | Transaksi | 120 baris |
+| `pre_order_Menu` | Transaksi (junction) | 200 baris |
+| `pembayaran` | Transaksi | 120 baris |
+
+> [!IMPORTANT]
+> Semua data dummy akan realistis (nama mahasiswa Indonesia, lokasi ITS asli, menu makanan kantin sesungguhnya, NRP format ITS).
+
+---
+
+## Proposed Changes
+
+### 1. DDL - Sudah Ada ✅
+
+File [ddl.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/ddl.sql) sudah lengkap, termasuk:
+- 10 tabel sesuai PDM
+- 3 user roles (admin_user, kantin_manager, customer_user)
+- Indexes
+
+Akan ditambahkan sedikit penyesuaian pada `pre_order_Menu` untuk menampung `jumlah` (quantity) agar query lebih bermakna.
+
+---
+
+### 2. DML - Data Dummy Realistis
+
+#### [NEW] [dml.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/dml.sql)
+
+Data dummy dengan konteks ITS Surabaya:
+- **mahasiswa**: 50 mahasiswa dengan NRP format ITS (5025XXXXXX), email `@its.ac.id`, no HP Indonesia
+- **Pemilik_Kantin**: 10 pemilik kantin dengan nama Indonesia
+- **Kantin**: 10 kantin ITS nyata (Kantin Pusat, Kantin Informatika, Kantin Teknik Sipil, dll)
+- **Sesi_Waktu**: 4 slot per kantin (Pagi, Siang, Sore, Malam)
+- **Kategori_Menu**: 25 kategori (Nasi, Mie, Minuman, Snack, dll)
+- **Menu**: 80 menu dengan nama dan harga realistis
+- **Payment_gateway**: 8 metode pembayaran (GoPay, OVO, Dana, dll)
+- **pre_order**: 120 pre-order
+- **pre_order_Menu**: 200 item pesanan
+- **pembayaran**: 120 pembayaran
+
+---
+
+### 3. Queries Per Anggota
+
+#### [NEW] [queries_anggota1_kamal.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/queries_anggota1_kamal.sql)
+
+**Kamal Zaky Adinata (5025241153)**
+
+| No | Tipe | Deskripsi |
+|----|------|-----------|
+| 1 | JOIN Search | Total spending per mahasiswa dengan nama kantin |
+| 2 | JOIN Search | Menu terlaris di setiap kantin berdasarkan jumlah order |
+| 3 | View | `v_ringkasan_order` - Ringkasan order lengkap (mahasiswa, kantin, total) |
+| 4 | View | `v_menu_populer` - Menu paling populer per kantin |
+| 5 | Trigger | `trg_update_stok` - Auto update stok_hari_ini saat ada order baru |
+| 6 | Trigger | `trg_update_terjual` - Auto update terjual_hari_ini saat order selesai |
+| 7 | Function | `fn_hitung_total_order` - Hitung total harga order berdasarkan items |
+| 8 | Procedure | `sp_buat_pre_order` - Procedure lengkap membuat pre-order baru |
+
+---
+
+#### [NEW] [queries_anggota2_naufal.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/queries_anggota2_naufal.sql)
+
+**Muhammad Naufal Hadaya Setiawan (5025241181)**
+
+| No | Tipe | Deskripsi |
+|----|------|-----------|
+| 1 | JOIN Search | Daftar order per sesi waktu dengan detail mahasiswa |
+| 2 | JOIN Search | Revenue per kantin per bulan |
+| 3 | View | `v_status_pembayaran` - Status pembayaran dengan detail order dan gateway |
+| 4 | View | `v_kantin_rating` - Kantin dengan rating dan jumlah order |
+| 5 | Trigger | `trg_auto_expired_bayar` - Set expired_at 24 jam setelah pembuatan pembayaran |
+| 6 | Trigger | `trg_log_status_change` - Log setiap perubahan status order |
+| 7 | Function | `fn_cek_kapasitas_slot` - Cek apakah slot masih tersedia |
+| 8 | Procedure | `sp_proses_pembayaran` - Procedure memproses pembayaran |
+
+---
+
+#### [NEW] [queries_anggota3_mahendra.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/queries_anggota3_mahendra.sql)
+
+**Mahendra Agung D (5025241032)**
+
+| No | Tipe | Deskripsi |
+|----|------|-----------|
+| 1 | JOIN Search | Kantin dengan menu terbanyak beserta kategori |
+| 2 | JOIN Search | Mahasiswa yang order lebih dari 5x dengan detail kantin |
+| 3 | View | `v_stok_menu_harian` - Status stok menu harian per kantin |
+| 4 | View | `v_pendapatan_kantin` - Rekapitulasi pendapatan per kantin |
+| 5 | Trigger | `trg_set_default_rating` - Set default rating saat kantin baru |
+| 6 | Trigger | `trg_validasi_jam_order` - Validasi jam order sesuai sesi waktu |
+| 7 | Function | `fn_get_kantin_terlaris` - Return kantin dengan order terbanyak |
+| 8 | Procedure | `sp_reset_stok_harian` - Reset stok harian semua menu |
+
+---
+
+#### [NEW] [queries_anggota4_raditya.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/queries_anggota4_raditya.sql)
+
+**Raditya Zhafran Pranuja (5025241120)**
+
+| No | Tipe | Deskripsi |
+|----|------|-----------|
+| 1 | JOIN Search | Detail pembayaran dengan nama mahasiswa dan metode bayar |
+| 2 | JOIN Search | Menu yang belum pernah dipesan |
+| 3 | View | `v_sesi_aktif` - Sesi waktu yang aktif beserta info kantin |
+| 4 | View | `v_order_harian` - Rekap order per hari |
+| 5 | Trigger | `trg_prevent_order_inactive_menu` - Cegah order menu yang tidak tersedia |
+| 6 | Trigger | `trg_auto_update_rating` - Auto update rating kantin berdasarkan jumlah order selesai |
+| 7 | Function | `fn_format_kode_order` - Generate kode order unik |
+| 8 | Procedure | `sp_batalkan_order` - Procedure untuk membatalkan order |
+
+---
+
+#### [NEW] [queries_anggota5_yosua.sql](file:///c:/Users/TUF/OneDrive/Semester%204/MBD/FP%20MBD/queries_anggota5_yosua.sql)
+
+**Yosua Hares (5025221270)**
+
+| No | Tipe | Deskripsi |
+|----|------|-----------|
+| 1 | JOIN Search | Histori order mahasiswa lengkap dengan menu dan harga |
+| 2 | JOIN Search | Kantin dengan pembayaran gagal terbanyak |
+| 3 | View | `v_mahasiswa_aktif` - Mahasiswa dengan total order dan spending |
+| 4 | View | `v_payment_gateway_usage` - Penggunaan payment gateway |
+| 5 | Trigger | `trg_cek_email_format` - Validasi format email mahasiswa saat insert |
+| 6 | Trigger | `trg_auto_set_updated_at` - Auto update `updated_at` pada pre_order |
+| 7 | Function | `fn_hitung_diskon` - Hitung diskon berdasarkan jumlah order mahasiswa |
+| 8 | Procedure | `sp_laporan_harian` - Procedure generate laporan harian per kantin |
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> 1. Apakah perlu menambahkan kolom `jumlah` (quantity) pada tabel `pre_order_Menu`? Saat ini tabel junction hanya menyimpan FK, sehingga 1 order hanya bisa memesan 1 porsi per menu. Rekomendasi: tambahkan `jumlah INT DEFAULT 1`.
+> 2. Apakah nama-nama anggota kelompok sudah benar sesuai urutan?
+> 3. Apakah database name yang digunakan `krun_db` atau lainnya?
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Jalankan seluruh DDL di PostgreSQL untuk memastikan tabel terbuat tanpa error
+- Jalankan DML untuk insert data dummy
+- Jalankan seluruh query anggota satu per satu
+
+### Manual Verification
+- Pastikan jumlah baris sesuai requirement (master ≥ 40, transaksi ≥ 100)
+- Pastikan setiap anggota memiliki 2 JOIN, 2 view, 2 trigger, 2 function/procedure
+- Pastikan tidak ada function yang overlap dengan trigger anggota lain
