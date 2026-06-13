@@ -1,25 +1,25 @@
 -- QUERY ANGGOTA 2 - MUHAMMAD NAUFAL HADAYA SETIAWAN (5025241181)
 
 -- 1. QUERY SEARCHING (JOIN) #1
--- Daftar order per sesi waktu dengan detail mahasiswa dan kantin
+-- Slot waktu paling ramai pada tanggal tertentu untuk membantu kantin menyiapkan kapasitas layanan
 
-SELECT 
+SELECT
+    po.tanggal_ambil,
+    k.nama_kantin,
+    k.lokasi,
     sw.label AS sesi,
     sw.jam_mulai,
     sw.jam_selesai,
-    k.nama_kantin,
-    k.lokasi,
-    m.nama AS nama_mahasiswa,
-    po.kode_order,
-    po.tanggal_ambil,
-    po.status,
-    po.total_harga
+    sw.kapasitas_order,
+    COUNT(po.id_pre_order) AS total_order,
+    ROUND((COUNT(po.id_pre_order)::DECIMAL / sw.kapasitas_order) * 100, 2) AS persentase_pemakaian_kapasitas
 FROM pre_order po
 JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
 JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
-JOIN mahasiswa m ON po.mahasiswa_id_us = m.id_user
-WHERE sw.is_active = TRUE
-ORDER BY sw.label, k.nama_kantin, po.tanggal_ambil DESC;
+WHERE po.status NOT IN ('cancelled')
+  AND po.tanggal_ambil = DATE '2026-05-28'
+GROUP BY po.tanggal_ambil, k.nama_kantin, k.lokasi, sw.label, sw.jam_mulai, sw.jam_selesai, sw.kapasitas_order
+ORDER BY total_order DESC;
 
 -- 2. QUERY SEARCHING (JOIN) #2
 -- Revenue per kantin per bulan (pendapatan bulanan)

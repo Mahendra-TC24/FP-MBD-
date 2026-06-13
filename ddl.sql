@@ -164,20 +164,12 @@ CREATE INDEX idx_pembayaran_status ON pembayaran(status);
 
 
 -- CREATE USERS WITH DIFFERENT ACCESS RIGHTS
-
-
--- ======================================
--- Reset role
--- ======================================
-DROP OWNED BY admin_user, kantin_manager, customer_user, payment_service;
-
+DROP OWNED BY admin_user, kantin_manager, customer_user, payment_service CASCADE;
 DROP ROLE IF EXISTS admin_user;
 DROP ROLE IF EXISTS kantin_manager;
 DROP ROLE IF EXISTS customer_user;
 DROP ROLE IF EXISTS payment_service;
--- =================================
--- role making
--- =================================
+
 
 -- User 1: Admin 
 CREATE ROLE admin_user WITH LOGIN PASSWORD 'admin_password_123' NOSUPERUSER NOCREATEDB NOCREATEROLE;

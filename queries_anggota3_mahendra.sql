@@ -23,7 +23,7 @@ ORDER BY jumlah_menu DESC, k.nama_kantin;
 
 
 -- 2. QUERY SEARCHING (JOIN) #2
--- Mahasiswa yang order lebih dari 3x dengan detail kantin favorit
+-- Mahasiswa yang order lebih dari 1x dengan detail kantin favorit
 
 
 SELECT 
@@ -39,7 +39,7 @@ JOIN pre_order po ON m.id_user = po.mahasiswa_id_us
 JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
 JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
 GROUP BY m.id_user, m.nama, m.email, k.nama_kantin
-HAVING COUNT(po.id_pre_order) > 3
+HAVING COUNT(po.id_pre_order) > 1
 ORDER BY total_order DESC;
 
 
@@ -69,6 +69,10 @@ JOIN Kategori_Menu km ON mn.Kategori_Menu = km.id_categori
 JOIN Kantin k ON km.Kantin_id_kantin = k.id_kantin
 ORDER BY k.nama_kantin, mn.stok_hari_ini ASC;
 
+-- cara menjalankan: 
+SELECT * FROM v_stok_menu_harian;
+
+
 
 -- 4. VIEW #2
 -- v_pendapatan_kantin: Rekapitulasi pendapatan per kantin
@@ -93,6 +97,9 @@ LEFT JOIN pre_order po ON sw.id_slot = po.Sesi_Waktu_id_slo
 GROUP BY k.id_kantin, k.nama_kantin, k.lokasi, pk.nama
 ORDER BY total_pendapatan DESC;
 
+-- cara menjalankan:
+SELECT * FROM v_pendapatan_kantin;
+
 
 -- 5. TRIGGER #1
 -- trg_set_default_rating: Set default rating 0.0 saat kantin baru dibuat
@@ -112,6 +119,13 @@ CREATE OR REPLACE TRIGGER trg_set_default_rating
 BEFORE INSERT ON Kantin
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_set_default_rating();
+
+-- Cara mengetes
+INSERT INTO Kantin (id_kantin, nama_kantin, lokasi, Pemilik_Kantin_id_p) 
+VALUES ('KNT999', 'Kantin Coba', 'Lokasi Coba', 'PMK001');
+
+-- cara mengecek
+SELECT id_kantin, nama_kantin, rating FROM Kantin WHERE id_kantin = 'KNT999';
 
 
 -- 6. TRIGGER #2
@@ -141,6 +155,13 @@ CREATE OR REPLACE TRIGGER trg_validasi_jam_order
 BEFORE INSERT ON pre_order
 FOR EACH ROW
 EXECUTE FUNCTION fn_trg_validasi_jam_order();
+
+-- cara mengetes 
+UPDATE Sesi_Waktu SET is_active = FALSE WHERE id_slot = 'SLT001';
+
+INSERT INTO pre_order (id_pre_order, kode_order, tanggal_ambil, mahasiswa_id_us, Sesi_Waktu_id_slo) 
+VALUES ('PRE999', 'KR-TEST-123', '2026-05-01', 'USR001', 'SLT001');
+
 
 
 -- 7. FUNCTION #1
@@ -178,12 +199,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Contoh pemanggilan:
--- SELECT * FROM fn_get_kantin_terlaris('2026-04-01', '2026-06-30');
+SELECT * FROM fn_get_kantin_terlaris('2026-04-01', '2026-06-30');
 
 
 -- 8. PROCEDURE #1
 -- sp_reset_stok_harian: Procedure reset stok harian semua menu
-
 
 CREATE OR REPLACE PROCEDURE sp_reset_stok_harian(
     p_id_kantin VARCHAR DEFAULT NULL
@@ -218,5 +238,5 @@ END;
 $$;
 
 -- Contoh pemanggilan:
--- CALL sp_reset_stok_harian();              -- Reset semua
--- CALL sp_reset_stok_harian('KNT001');      -- Reset kantin tertentu
+CALL sp_reset_stok_harian();              -- Reset semua
+CALL sp_reset_stok_harian('KNT001');      -- Reset kantin tertentu
