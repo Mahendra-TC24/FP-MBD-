@@ -328,3 +328,130 @@ WHERE pb.id_pembayaran = 'PBY-PRE001-180';
 
 -- Contoh pemanggilan:
 -- CALL sp_proses_pembayaran('PBY-PRE001-123', 'success');
+
+
+
+-- 10. TRIGGER #3
+-- add atribut total_point pada tabel kantin_manager.
+-- Trigger menambah point sebesar 5% dari 2 digit akhir no_hp mahasiswa
+-- ketika payment_service mengubah status_bayar pre_order menjadi 'paid'
+-- untuk order di kantin yang berlokasi di Jl. Teknik Kimia.
+
+ALTER TABLE Kantin_manager
+ADD COLUMN IF NOT EXISTS total_point INT DEFAULT 0;
+
+UPDATE Kantin_manager
+SET total_point = 0
+WHERE total_point IS NULL;
+
+INSERT INTO Kantin_manager (id_kantin)
+SELECT k.id_kantin
+FROM Kantin k
+ON CONFLICT (id_kantin) DO NOTHING;
+
+GRANT SELECT ON pre_order, Sesi_Waktu, Kantin, mahasiswa, Kantin_manager TO payment_service;
+GRANT UPDATE (status_bayar, url_bukti_bayar, updated_at) ON pre_order TO payment_service;
+GRANT UPDATE (total_point) ON Kantin_manager TO payment_service;
+
+CREATE OR REPLACE FUNCTION fn_trg_add_point_kantin_manager()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_id_kantin VARCHAR;
+    v_point INT;
+BEGIN
+    SELECT
+        k.id_kantin,
+        CEIL((RIGHT(m.no_hp, 2)::INT * 5.0) / 100)::INT
+    INTO v_id_kantin, v_point
+    FROM pre_order po
+    JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
+    JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
+    JOIN mahasiswa m ON po.mahasiswa_id_us = m.id_user
+    WHERE po.id_pre_order = NEW.id_pre_order
+      AND k.lokasi ILIKE '%Jl. Teknik Kimia%';
+
+    IF v_id_kantin IS NOT NULL THEN
+        UPDATE Kantin_manager
+        SET total_point = COALESCE(total_point, 0) + COALESCE(v_point, 0)
+        WHERE id_kantin = v_id_kantin;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_add_point_kantin_manager ON pre_order;
+
+CREATE TRIGGER trg_add_point_kantin_manager
+AFTER UPDATE OF status_bayar ON pre_order
+FOR EACH ROW
+WHEN (
+    OLD.status_bayar IS DISTINCT FROM NEW.status_bayar
+    AND NEW.status_bayar = 'paid'
+)
+EXECUTE FUNCTION fn_trg_add_point_kantin_manager();
+
+
+-- Testingg trigger
+
+-- Cek Kantin yang ada di jalan teknik kimia
+SELECT
+    k.id_kantin,
+    k.nama_kantin,
+    k.lokasi
+FROM Kantin k
+WHERE k.lokasi ILIKE '%Jl. Teknik Kimia%'
+ORDER BY k.id_kantin;
+
+-- Cek Order kantin
+SELECT
+    po.id_pre_order,
+    po.kode_order,
+    k.id_kantin,
+    k.nama_kantin,
+    po.status,
+    po.status_bayar,
+    m.id_user,
+    m.nama AS nama_mahasiswa,
+    m.no_hp,
+    RIGHT(m.no_hp, 2)::INT AS dua_digit_akhir_no_hp,
+    CEIL((RIGHT(m.no_hp, 2)::INT * 5.0) / 100)::INT AS point_yang_akan_ditambah,
+    po.updated_at
+FROM pre_order po
+JOIN Sesi_Waktu sw ON po.Sesi_Waktu_id_slo = sw.id_slot
+JOIN Kantin k ON sw.Kantin_id_kantin = k.id_kantin
+JOIN mahasiswa m ON po.mahasiswa_id_us = m.id_user
+WHERE k.lokasi ILIKE '%Jl. Teknik Kimia%'
+ORDER BY po.status_bayar, po.id_pre_order;
+
+-- Cek Total Point awal Kantin
+SELECT
+    km.id_kantin,
+    k.nama_kantin,
+    k.lokasi,
+    km.total_point AS total_point_sebelum_update
+FROM Kantin_manager km
+JOIN Kantin k ON km.id_kantin = k.id_kantin
+WHERE k.lokasi ILIKE '%Jl. Teknik Kimia%'
+ORDER BY km.id_kantin;
+
+-- Dengan hak akses payment_service update order yang non paid menjadi paid
+SET ROLE payment_service;
+
+UPDATE pre_order
+SET status_bayar = 'paid',
+    updated_at = CURRENT_TIMESTAMP
+WHERE id_pre_order = 'PRE116';
+
+RESET ROLE;
+
+-- Cek tabel total point setelah update
+SELECT
+    km.id_kantin,
+    k.nama_kantin,
+    k.lokasi,
+    km.total_point AS total_point_sesudah_update
+FROM Kantin_manager km
+JOIN Kantin k ON km.id_kantin = k.id_kantin
+WHERE k.lokasi ILIKE '%Jl. Teknik Kimia%'
+ORDER BY km.id_kantin;
