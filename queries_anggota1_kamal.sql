@@ -335,3 +335,162 @@ CALL sp_buat_pre_order_lengkap(
     NULL,
     NULL
 );
+
+################Final - demo
+
+alter table mahasiswa add column total_point decimal(10,2) default 0.00;
+
+grant insert on pre_order_menu to kantin_manager;
+grant update (total_point) on mahasiswa to kantin_manager;
+
+create or replace function add_point_fnc()
+returns trigger 
+language plpgsql
+as $$
+begin 
+    if current_user = 'kantin_manager'then update mahasiswa
+    set total_point = mahasiswa.total_point + (right(mahasiswa.no_hp,2)::decimal * 0.05)
+    from pre_order, menu, kategori_menu, kantin
+    where 
+    pre_order.id_pre_order = new.pre_order_id_pre_ord
+    and menu.id_menu = new.menu_id_menu
+    and kategori_menu.id_categori = menu.Kategori_Menu
+    and kantin.id_kantin = kategori_menu.Kantin_id_kantin
+    and mahasiswa.id_user = pre_order.mahasiswa_id_us
+    and kantin.lokasi ilike '%Jl. Teknik Kimia%'
+    and mahasiswa.no_hp is not null;
+    END IF; 
+    RETURN NEW; 
+END; 
+$$;
+
+create trigger add_point_trg 
+after insert on pre_order_menu
+for each row 
+execute function add_point_fnc();
+
+#skenario 1
+RESET ROLE;
+SET ROLE kantin_manager;
+
+SELECT CURRENT_USER;
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sebelum
+FROM mahasiswa
+WHERE id_user = 'USR045';
+
+
+
+INSERT INTO pre_order_menu (
+    pre_order_id_pre_ord,
+    menu_id_menu,
+    jumlah
+)
+VALUES (
+    'PRE061',
+    'MNU048',
+    1
+);
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sesudah
+FROM mahasiswa
+WHERE id_user = 'USR045';
+
+###skneario 2:
+RESET ROLE;
+SET ROLE customer_user;
+
+SELECT CURRENT_USER;
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sebelum
+FROM mahasiswa
+WHERE id_user = 'USR012';
+
+INSERT INTO pre_order_menu (
+    pre_order_id_pre_ord,
+    menu_id_menu,
+    jumlah
+)
+VALUES (
+    'PRE070',
+    'MNU054',
+    1
+);
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sesudah
+FROM mahasiswa
+WHERE id_user = 'USR012';
+
+#skenario 3:
+RESET ROLE;
+SET ROLE kantin_manager;
+
+SELECT CURRENT_USER;
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sebelum
+FROM mahasiswa
+WHERE id_user = 'USR027';
+
+INSERT INTO pre_order_menu (
+    pre_order_id_pre_ord,
+    menu_id_menu,
+    jumlah
+)
+VALUES (
+    'PRE089',
+    'MNU036',
+    1
+);
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sesudah
+FROM mahasiswa
+WHERE id_user = 'USR027';
+
+#skenario 4
+RESET ROLE;
+SET ROLE customer_user;
+
+SELECT CURRENT_USER;
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sebelum
+FROM mahasiswa
+WHERE id_user = 'USR031';
+
+INSERT INTO pre_order_menu (
+    pre_order_id_pre_ord,
+    menu_id_menu,
+    jumlah
+)
+VALUES (
+    'PRE003',
+    'MNU057',
+    1
+);
+
+SELECT
+    id_user,
+    no_hp,
+    total_point AS point_sesudah
+FROM mahasiswa
+WHERE id_user = 'USR031';
+
