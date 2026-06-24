@@ -303,8 +303,7 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_trg_add_point_warung();
 
 
--- CARA Mengetes 
-
+-- Cara mengetes 
 -- langkah 1: Cek kantin yang mengandung kata "warung"
 SELECT id_kantin, nama_kantin FROM Kantin WHERE nama_kantin ILIKE '%warung%';
 
@@ -320,7 +319,7 @@ SELECT id_user, nama, total_point FROM mahasiswa WHERE id_user = 'USR001';
 -- Hasil yang diharapkan: total_point = 0 
 
 -- langkah 4: Buat pre_order baru untuk testing
--- created_at = 2026-06-23 -> tanggal = 23 -> point = 23 * 10% = 2.30
+-- created_at = 2026-06-23, tanggal = 23, point = 23 * 10% = 2.30
 INSERT INTO pre_order (id_pre_order, kode_order, tanggal_ambil, status, mahasiswa_id_us, Sesi_Waktu_id_slo, created_at)
 VALUES ('PRE997', 'KR-TEST-POINT-001', '2026-06-25', 'pending', 'USR001', 'SLT002', '2026-06-23 14:30:00');
 
