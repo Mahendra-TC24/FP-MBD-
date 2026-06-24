@@ -240,3 +240,116 @@ $$;
 -- Contoh pemanggilan:
 CALL sp_reset_stok_harian();              -- Reset semua
 CALL sp_reset_stok_harian('KNT001');      -- Reset kantin tertentu
+
+
+
+-- 9. add atribut total_point pada mahasiswa. Kemudian buat trigger add point 10% dari tanggal created_at yang memesan menu dari kantin mengandung kata warung menggunakan hak akses kantin_manager
+
+-- Menambah kolom total_point pada tabel mahasiswa
+ALTER TABLE mahasiswa ADD COLUMN IF NOT EXISTS total_point DECIMAL(10,2) DEFAULT 0;
+
+
+-- Memberikan hak akses UPDATE kolom total_point kepada kantin_manager
+GRANT UPDATE (total_point) ON mahasiswa TO kantin_manager;
+
+
+-- Membuat fungsi trigger untuk menambahkan poin reward secara otomatis ke akun mahasiswa ketika mereka memesan menu dari kantin yang namanya mengandung kata “warung”
+CREATE OR REPLACE FUNCTION fn_trg_add_point_warung()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_nama_kantin TEXT;
+    v_created_at TIMESTAMP;
+    v_mahasiswa_id VARCHAR(9);
+    v_tanggal INT;
+    v_point DECIMAL(10,2);
+BEGIN
+    SELECT po.created_at, po.mahasiswa_id_us
+    INTO v_created_at, v_mahasiswa_id
+    FROM pre_order po
+    WHERE po.id_pre_order = NEW.pre_order_id_pre_ord;
+
+    SELECT k.nama_kantin
+    INTO v_nama_kantin
+    FROM Menu mn
+    JOIN Kategori_Menu km ON mn.Kategori_Menu = km.id_categori
+    JOIN Kantin k ON km.Kantin_id_kantin = k.id_kantin
+    WHERE mn.id_menu = NEW.Menu_id_menu;
+
+
+    IF v_nama_kantin ILIKE '%warung%' THEN
+        v_tanggal := EXTRACT(DAY FROM v_created_at);
+        v_point := v_tanggal * 0.10;
+        UPDATE mahasiswa
+        SET total_point = COALESCE(total_point, 0) + v_point
+        WHERE id_user = v_mahasiswa_id;
+
+        RAISE NOTICE 'Point +% ditambahkan untuk mahasiswa % (kantin: %, tanggal: %)',
+            v_point, v_mahasiswa_id, v_nama_kantin, v_tanggal;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+SECURITY DEFINER;
+
+-- Set owner fungsi ke kantin_manager agar trigger berjalan dengan hak akses kantin_manager
+ALTER FUNCTION fn_trg_add_point_warung() OWNER TO kantin_manager;
+
+
+-- Membuat trigger pada tabel pre_order_Menu (after insert)
+CREATE OR REPLACE TRIGGER trg_add_point_warung
+AFTER INSERT ON pre_order_Menu
+FOR EACH ROW
+EXECUTE FUNCTION fn_trg_add_point_warung();
+
+
+-- CARA Mengetes 
+
+-- langkah 1: Cek kantin yang mengandung kata "warung"
+SELECT id_kantin, nama_kantin FROM Kantin WHERE nama_kantin ILIKE '%warung%';
+
+-- langkah 2: Cek menu yang berasal dari kantin "warung"
+SELECT mn.id_menu, mn.nama_menu, km.nama_kategori, k.nama_kantin
+FROM Menu mn
+JOIN Kategori_Menu km ON mn.Kategori_Menu = km.id_categori
+JOIN Kantin k ON km.Kantin_id_kantin = k.id_kantin
+WHERE k.nama_kantin ILIKE '%warung%';
+
+--langkah 3: Cek total_point mahasiswa sebelum insert (USR001 = Prasetyo Setiawan)
+SELECT id_user, nama, total_point FROM mahasiswa WHERE id_user = 'USR001';
+-- Hasil yang diharapkan: total_point = 0 
+
+-- langkah 4: Buat pre_order baru untuk testing
+-- created_at = 2026-06-23 -> tanggal = 23 -> point = 23 * 10% = 2.30
+INSERT INTO pre_order (id_pre_order, kode_order, tanggal_ambil, status, mahasiswa_id_us, Sesi_Waktu_id_slo, created_at)
+VALUES ('PRE997', 'KR-TEST-POINT-001', '2026-06-25', 'pending', 'USR001', 'SLT002', '2026-06-23 14:30:00');
+
+-- langkah 5: Insert menu dari kantin "warung" maka trigger akan aktif
+INSERT INTO pre_order_Menu (pre_order_id_pre_ord, Menu_id_menu, jumlah, harga_satuan)
+VALUES ('PRE997', 'MNU036', 1, 14000.00);
+-- Trigger akan mendeteksi KNT001 mengandung "warung" lalu menambah point 2.30
+
+-- langkah 6: Cek total_point mahasiswa sesudah trigger
+SELECT id_user, nama, total_point FROM mahasiswa WHERE id_user = 'USR001';
+-- Hasil yang diharapkan: total_point = 2.30
+
+-- langkah 7: Test tambah menu lagi dari kantin warung (point bertambah kumulatif)
+INSERT INTO pre_order_Menu (pre_order_id_pre_ord, Menu_id_menu, jumlah, harga_satuan)
+VALUES ('PRE997', 'MNU037', 1, 13000.00);
+-- Point bertambah lagi 2.30
+
+-- langkah 8: Cek total_point setelah 2x trigger
+SELECT id_user, nama, total_point FROM mahasiswa WHERE id_user = 'USR001';
+-- Hasil yang diharapkan: total_point = 4.60 (2.30 + 2.30)
+
+-- langkah 9: Test dengan kantin BUKAN warung (point tidak akan bertambah)
+INSERT INTO pre_order (id_pre_order, kode_order, tanggal_ambil, status, mahasiswa_id_us, Sesi_Waktu_id_slo, created_at)
+VALUES ('PRE998', 'KR-TEST-POINT-002', '2026-06-25', 'pending', 'USR001', 'SLT003', '2026-06-15 10:00:00');
+
+INSERT INTO pre_order_Menu (pre_order_id_pre_ord, Menu_id_menu, jumlah, harga_satuan)
+VALUES ('PRE998', 'MNU057', 1, 12000.00);
+-- Trigger tidak menambah point
+
+-- lankgah 10: Verifikasi point tidak bertambah
+SELECT id_user, nama, total_point FROM mahasiswa WHERE id_user = 'USR001';
+-- Hasil yang diharapkan: total_point tetap 4.60 (tidak bertambah)
